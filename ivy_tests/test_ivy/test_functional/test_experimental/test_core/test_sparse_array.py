@@ -1,11 +1,10 @@
 # global
-from hypothesis import given, strategies as st
+from hypothesis import strategies as st
 
 # local
-import numpy as np
 import ivy_tests.test_ivy.helpers as helpers
-from ivy_tests.test_ivy.helpers import handle_cmd_line_args
-
+from ivy_tests.test_ivy.helpers import handle_method
+from ivy_tests.test_ivy.helpers import test_parameter_flags as pf
 
 # Helpers #
 # ------- #
@@ -23,6 +22,7 @@ def _sparse_coo_indices_values_shape(draw):
             shape=(2, num_elem),
             min_value=0,
             max_value=dim1,
+            exclude_min=False,
         )
     )
     values = draw(helpers.array_values(dtype=value_dtype, shape=(num_elem,)))
@@ -43,6 +43,7 @@ def _sparse_csr_indices_values_shape(draw):
             shape=(num_elem,),
             min_value=0,
             max_value=dim2,
+            exclude_min=False,
         )
     )
     indices = draw(
@@ -51,6 +52,7 @@ def _sparse_csr_indices_values_shape(draw):
             shape=(dim1 - 1,),
             min_value=0,
             max_value=num_elem,
+            exclude_min=False,
         )
     )
     crow_indices = [0] + sorted(indices) + [num_elem]
@@ -59,65 +61,73 @@ def _sparse_csr_indices_values_shape(draw):
 
 
 # coo - to_dense_array
-@handle_cmd_line_args
-@given(sparse_data=_sparse_coo_indices_values_shape())
+@handle_method(
+    method_tree="SparseArray.to_dense_array",
+    sparse_data=_sparse_coo_indices_values_shape(),
+)
 def test_sparse_coo(
     sparse_data,
-    as_variable,
-    with_out,
-    native_array,
-    fw,
+    init_as_variable_flags: pf.AsVariableFlags,
+    init_native_array_flags: pf.NativeArrayFlags,
+    class_name,
+    method_name,
+    ground_truth_backend,
 ):
     coo_ind, val_dtype, val, shp = sparse_data
     helpers.test_method(
-        input_dtypes_init=["int64", val_dtype],
-        as_variable_flags_init=as_variable,
-        num_positional_args_init=0,
-        native_array_flags_init=native_array,
-        all_as_kwargs_np_init={
-            "coo_indices": np.array(coo_ind, dtype="int64"),
-            "values": np.array(val, dtype=val_dtype),
+        ground_truth_backend=ground_truth_backend,
+        init_input_dtypes=["int64", val_dtype],
+        init_as_variable_flags=init_as_variable_flags,
+        init_num_positional_args=0,
+        init_native_array_flags=init_native_array_flags,
+        init_all_as_kwargs_np={
+            "coo_indices": coo_ind,
+            "values": val,
             "dense_shape": shp,
         },
-        input_dtypes_method=[],
-        as_variable_flags_method=as_variable,
-        num_positional_args_method=0,
-        native_array_flags_method=native_array,
-        container_flags_method=False,
-        all_as_kwargs_np_method={},
-        class_name="SparseArray",
-        method_name="to_dense_array",
+        method_input_dtypes=[],
+        method_as_variable_flags=[],
+        method_num_positional_args=0,
+        method_native_array_flags=[],
+        method_container_flags=[False],
+        method_all_as_kwargs_np={},
+        class_name=class_name,
+        method_name=method_name,
     )
 
 
 # csr - to_dense_array
-@handle_cmd_line_args
-@given(sparse_data=_sparse_csr_indices_values_shape())
+@handle_method(
+    method_tree="SparseArray.to_dense_array",
+    sparse_data=_sparse_csr_indices_values_shape(),
+)
 def test_sparse_csr(
     sparse_data,
-    as_variable,
-    with_out,
-    native_array,
-    fw,
+    init_as_variable_flags: pf.AsVariableFlags,
+    init_native_array_flags: pf.NativeArrayFlags,
+    class_name,
+    method_name,
+    ground_truth_backend,
 ):
     crow_indices, col_indices, value_dtype, values, shape = sparse_data
     helpers.test_method(
-        input_dtypes_init=["int64", "int64", value_dtype],
-        as_variable_flags_init=as_variable,
-        num_positional_args_init=0,
-        native_array_flags_init=native_array,
-        all_as_kwargs_np_init={
-            "csr_crow_indices": np.array(crow_indices, dtype="int64"),
-            "csr_col_indices": np.array(col_indices, dtype="int64"),
-            "values": np.array(values, dtype=value_dtype),
+        ground_truth_backend=ground_truth_backend,
+        init_input_dtypes=["int64", "int64", value_dtype],
+        init_as_variable_flags=init_as_variable_flags,
+        init_num_positional_args=0,
+        init_native_array_flags=init_native_array_flags,
+        init_all_as_kwargs_np={
+            "csr_crow_indices": crow_indices,
+            "csr_col_indices": col_indices,
+            "values": values,
             "dense_shape": shape,
         },
-        input_dtypes_method=[],
-        as_variable_flags_method=[],
-        num_positional_args_method=0,
-        native_array_flags_method=[],
-        container_flags_method=False,
-        all_as_kwargs_np_method={},
-        class_name="SparseArray",
-        method_name="to_dense_array",
+        method_input_dtypes=[],
+        method_as_variable_flags=[],
+        method_num_positional_args=0,
+        method_native_array_flags=[],
+        method_container_flags=[False],
+        method_all_as_kwargs_np={},
+        class_name=class_name,
+        method_name=method_name,
     )
